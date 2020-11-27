@@ -9,6 +9,16 @@ export Limits, AxisAuto, PlotShape, Shape2D, Polygon2D, Segment, ListOfShapes, C
 const practical_zero=1e-4
 const win_scale=1.3
 
+struct Shape2D
+   x
+   y
+   line_width
+   line_col::Symbol
+   fill_col::Symbol
+   vert_col::Symbol
+end
+
+
 mutable struct ListOfShapes
         list::Array{Shape2D}
         order::Vector{Integer}
@@ -27,14 +37,6 @@ struct Limits
        YLim::Tuple{Float64,Float64}
 end
 
-struct Shape2D
-       x
-       y
-       line_width
-       line_col::Symbol
-       fill_col::Symbol
-       vert_col::Symbol
-end
 
 struct Segment
     p1::Vector{Float64}
@@ -58,7 +60,7 @@ end
 
 # Manipulations with shapes stored in a list
 
-function PlotShape(S::Shape2D,win:Limits,draw_mode=:add)
+function PlotShape(S::Shape2D,win::Limits,draw_mode=:add)
          if S.fill_col==:none
             myfill=nothing
          else
@@ -66,14 +68,17 @@ function PlotShape(S::Shape2D,win:Limits,draw_mode=:add)
          end
          if S.line_col!=:none
             if draw_mode==:new
-               plot(S.x,S.y,xlims=win.XLim,ylims=win.YLim,line=S.line_width,color=S.line_col,fill=myfill,leg=false,showaxis=false)
+               plt=plot(S.x,S.y,xlims=win.XLim,ylims=win.YLim,
+                        line=S.line_width,color=S.line_col,fill=myfill,leg=false,showaxis=false)
             else
-               plot!(S.x,S.y,xlims=win.XLim,ylims=win.YLim,line=S.line_width,color=S.line_col,fill=myfill,leg=false,showaxis=false)
+               plt=plot!(S.x,S.y,xlims=win.XLim,ylims=win.YLim,
+                         line=S.line_width,color=S.line_col,fill=myfill,leg=false,showaxis=false)
             end
          end
          if S.vert_col!=:none
-            plot!(S.x,S.y,xlims=win.XLim,ylims=win.YLim,seriestype=:scatter,color=S.vert_col)
+            plt=plot!(S.x,S.y,xlims=win.XLim,ylims=win.YLim,seriestype=:scatter,color=S.vert_col)
          end
+         return plt
 end
 
 function findelement(x::Vector{Integer},y::Integer)
@@ -109,12 +114,11 @@ function Draw(L::ListOfShapes,handle=1)
 # Draws all shapes in the list 
          place=findelement(L.order,handle)
          win=AxisAuto(L.list[place])
-         PlotShape(L.list[L.order[1]],win,:new)
+         plt=PlotShape(L.list[L.order[1]],win,:new)
          for i=2:length(L.order)
-             PlotShape(L.list[L.order[i]],win)
+             plt=PlotShape(L.list[L.order[i]],win)
          end
-         plot!()
-         return nothing
+         return plt
 end
 
 # ==========================================================
@@ -169,12 +173,12 @@ function draw_cones(pts::Array{Segment},p)
 end
 
 
-function Polygon2D(pts::Array{Segment};line_col=:blue,fill_col=:lime,vert_col=:orange)
+function Polygon2D(pts::Array{Segment}, line_col::Symbol,fill_col::Symbol,vert_col::Symbol)
     # Create 2D polygon from a list of Segments
         ordered=order_points(pts)
         x=[p[1] for p in ordered]
         y=[p[2] for p in ordered]
-        Shape2D(x,y,2,line_col,fill_col,vert_col)
+        return Shape2D(x,y,2,line_col,fill_col,vert_col)
 end
 
 function __init__()
