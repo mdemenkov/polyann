@@ -1,2 +1,2 @@
 # polyann
-Polyhedral Annexation method in Julia
+Polyhedral Annexation method in Julia (under construction)
